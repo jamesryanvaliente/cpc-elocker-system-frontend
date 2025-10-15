@@ -9,9 +9,8 @@
         <div class="mb-3">
           <select v-model="filter" class="form-select">
             <option>All</option>
-            <option>Open</option>
+            <option>Pending</option>
             <option>Answered</option>
-            <option>Closed</option>
           </select>
         </div>
 
@@ -28,9 +27,9 @@
               <strong>{{ ticket.subject }}</strong><br />
               <small>Status: {{ ticket.status || ticket.ticket_status }}</small>
             </div>
-            <span class="badge bg-primary rounded-pill">
+            <!-- <span class="badge bg-primary rounded-pill">
               {{ ticket.priority || "N/A" }}
-            </span>
+            </span> -->
           </li>
         </ul>
       </div>
@@ -177,7 +176,7 @@ const sendMessage = async () => {
 
   try {
     await axios.post(
-      `http://localhost:3001/tickets/${selectedTicket.value.ticket_id}/messages`,
+      `http://localhost:3001/tickets/${selectedTicket.value.ticket_id}/reply`,
       {
         message: newMessage.value,
         role: "admin",

@@ -42,9 +42,8 @@
         <div class="mb-3">
           <select v-model="filter" class="form-select">
             <option>All</option>
-            <option>Open</option>
+            <option>Pending</option>
             <option>Answered</option>
-            <option>Closed</option>
           </select>
         </div>
 
@@ -61,9 +60,9 @@
               <strong>{{ ticket.subject }}</strong><br />
               <small>Status: {{ ticket.status || ticket.ticket_status }}</small>
             </div>
-            <span class="badge bg-primary rounded-pill">
+            <!-- <span class="badge bg-primary rounded-pill">
               {{ ticket.priority || "N/A" }}
-            </span>
+            </span> -->
           </li>
         </ul>
       </div>
@@ -90,11 +89,11 @@
 
             <div v-else>
               <div v-for="msg in messages" :key="msg.id" class="mb-3">
-                <div :class="msg.sender === 'Admin' ? 'text-end' : 'text-start'">
+                <div :class="msg.sender === 'Student' ? 'text-end' : 'text-start'">
                   <div
                     :class="[
                       'd-inline-block p-2 rounded',
-                      msg.sender === 'Admin'
+                      msg.sender === 'Student'
                         ? 'bg-primary text-white'
                         : 'bg-light border'
                     ]"
@@ -160,7 +159,7 @@ const formatDate = (dateStr) => {
 // Fetch all tickets
 const fetchTickets = async () => {
   try {
-    const res = await axios.get("http://localhost:3001/tickets", {
+    const res = await axios.get("http://localhost:3001/my-tickets", {
       headers: { Authorization: `Bearer ${token}` },
     });
     tickets.value = Array.isArray(res.data) ? res.data : res.data.data || [];
@@ -199,17 +198,16 @@ const selectTicket = async (ticket) => {
       text: msg.message || msg.text || msg.content || "",
       date: msg.created_at || msg.date || new Date().toISOString(),
       sender:
-        msg.sender ||
-        (msg.role?.toLowerCase() === "admin"
+        msg.user_id === userId
+          ? "student"
+          : msg.role?.toLowerCase() === "admin"
           ? "Admin"
-          : msg.user_id === userId
-          ? "User"
-          : "Admin"),
-    }));
+          : "Student", // ✅ use backend role, fallback for missing data
+          }));
 
-    await nextTick();
-    const chatBox = document.querySelector(".chat-box");
-    if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+          await nextTick();
+          const chatBox = document.querySelector(".chat-box");
+          if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
   } catch (err) {
     console.error("Error fetching messages:", err.response?.data || err);
   } finally {
@@ -224,7 +222,7 @@ const sendMessage = async () => {
   const newMsgObj = {
     id: Date.now(),
     text: newMessage.value,
-    sender: "User",
+    sender: "Student",
     date: new Date().toISOString(),
   };
 
@@ -232,12 +230,12 @@ const sendMessage = async () => {
     const payload = {
       user_id: userId,
       message: newMessage.value,
-      role: "user",
+      role: "student",
       created_at: new Date().toISOString(),
     };
 
     await axios.post(
-      `http://localhost:3001/tickets/${selectedTicket.value.ticket_id}/messages`,
+      `http://localhost:3001/tickets/${selectedTicket.value.ticket_id}/reply`,
       payload,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -267,7 +265,7 @@ const submitTicket = async () => {
 
   try {
     await axios.post(
-      "http://localhost:3001/tickets",
+      "http://localhost:3001/create-tickets",
       { ...newTicket.value, user_id: userId },
       { headers: { Authorization: `Bearer ${token}` } }
     );
