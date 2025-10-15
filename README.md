@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # capstone_project
 
 ## Project setup
@@ -27,3 +28,6 @@ npm run lint
 ### Customize configuration
 
 See [Configuration Reference](https://cli.vuejs.org/config/).
+=======
+# cpc-elocker-system-frontend
+>>>>>>> 0bd1273518cd8c3a55b1ba9b92dd1a0eca5e477e
