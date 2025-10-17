@@ -89,7 +89,7 @@
               <div class="text-center mb-3">
                 <p class="fw-semibold">Choose what you want to do:</p>
                 <select v-model="form.action_type" class="form-select mb-3">
-                  <option disabled value="">-- select --</option>
+                  <option disabled value="">select</option>
                   <option value="rent">Rent</option>
                   <option value="reserve">Reserve</option>
                 </select>
@@ -137,7 +137,7 @@
                 <div class="mb-3 mt-3">
                   <label class="form-label">Payment Method:</label>
                   <select v-model="form.payment_method" class="form-select" required>
-                    <option disabled value="">-- select --</option>
+                    <option disabled value="">select</option>
                     <option value="cash">Cash</option>
                     <option value="qr">QR (GCash)</option>
                   </select>

@@ -1,25 +1,45 @@
 <template>
   <div class="container py-4">
     <!-- Header section -->
-    <div class="d-flex align-items-center mb-4 border-bottom pb-3">
-      <div class="position-relative">
+    <div class="profile-header d-flex align-items-center mb-4 border-bottom pb-3">
+      <div class="position-relative me-4">
         <img
-          :src="profileImageUrl"
+          v-if="form.profile_pic_url"
+          :src="form.profile_pic_url"
           alt="Profile"
           class="rounded-circle border"
           width="120"
           height="120"
         />
+        <img
+          v-else
+          :src="form.profile_pic_url || require('@/assets/logo.png')"
+          alt="Profile"
+          class="rounded-circle border"
+          width="120"
+          height="120"
+        />
+
+        <!-- hidden file input -->
+        <input
+          type="file"
+          ref="fileInput"
+          accept="image/*"
+          class="d-none"
+          @change="handleFileChange"
+        />
+
+        <!-- upload photo button -->
         <button
-          class="btn btn-sm btn-light position-absolute bottom-0 start-0 translate-middle p-1 rounded-circle shadow"
+          class="btn btn-light btn-sm position-absolute upload-btn"
+          @click.prevent="triggerFileInput"
         >
-          <i class="bi bi-camera"></i>
+          <i class="bi bi-camera-fill"></i>
         </button>
       </div>
-      <div class="ms-4">
-        <h4 class="fw-bold mb-1">
-          {{ form.first_name }} {{ form.last_name }}
-        </h4>
+
+      <div class="user-info">
+        <h4 class="fw-bold mb-1">{{ form.first_name }} {{ form.last_name }}</h4>
         <div class="text-muted">{{ form.course }}</div>
       </div>
     </div>
@@ -57,6 +77,7 @@
             id="firstName"
             class="form-control"
             v-model="form.first_name"
+            disabled
           />
         </div>
         <div class="col-md-6 mb-3">
@@ -66,6 +87,7 @@
             id="lastName"
             class="form-control"
             v-model="form.last_name"
+            disabled
           />
         </div>
       </div>
@@ -113,6 +135,7 @@ export default {
   data() {
     return {
       form: {
+        user_id: "",
         student_id: "",
         first_name: "",
         last_name: "",
@@ -126,34 +149,39 @@ export default {
       },
       message: "",
       messageClass: "",
+      previewImage: null,
     };
   },
-  computed: {
-    profileImageUrl() {
-      // ✅ Show uploaded image if available, otherwise show default logo
-      return this.form.profile_pic_url
-        ? `http://localhost:3001${this.form.profile_pic_url}`
-        : require("@/assets/logo.png");
-    },
-  },
+
+//   computed: {
+//   profileImageUrl() {
+//     // load from backend route using user_id
+//     return this.form.user_id
+//       ? `http://localhost:3001/profile-pic/${this.form.user_id}`
+//       : require("@/assets/logo.png");
+//   },
+// },
+
   async created() {
     try {
-      // ✅ Fetch user info from /settings
-      const response = await axios.get("http://localhost:3001/settings");
+      const response = await axios.get("http://localhost:3001/settings", {
+        withCredentials: true,
+      });
 
       if (response.data.user) {
         const user = response.data.user;
         this.form = {
           ...this.form,
+          user_id: user.user_id,
           student_id: user.student_id,
           first_name: user.first_name,
           last_name: user.last_name,
           course: user.course,
           username: user.username,
           role: user.role,
-          profile_picture: user.profile_picture,
-          profile_pic_url: user.profile_pic_url,
         };
+        // set image url from backend
+        this.form.profile_pic_url = `http://localhost:3001/profile-pic/${user.user_id}`;
       }
     } catch (error) {
       console.error("Error loading profile:", error);
@@ -161,31 +189,74 @@ export default {
       this.messageClass = "alert-danger";
     }
   },
+
   methods: {
-    async updateProfile() {
-      try {
-        const updateData = {
-          first_name: this.form.first_name,
-          last_name: this.form.last_name,
-          currentPassword: this.form.currentPassword,
-          newPassword: this.form.newPassword,
-        };
-
-        const res = await axios.put("http://localhost:3001/settings", updateData);
-
-        this.message = res.data.message || "Profile updated successfully!";
-        this.messageClass = "alert-success";
-
-        // Clear password fields
-        this.form.currentPassword = "";
-        this.form.newPassword = "";
-      } catch (error) {
-        console.error("Error updating profile:", error);
-        this.message =
-          error.response?.data?.error || "Failed to update profile.";
-        this.messageClass = "alert-danger";
-      }
+    triggerFileInput() {
+      this.$refs.fileInput.click();
     },
+
+    handleFileChange(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // preview before upload
+      this.previewImage = URL.createObjectURL(file);
+
+      const formData = new FormData();
+      formData.append("profile_pic", file);
+
+      axios
+        .post("http://localhost:3001/upload-profile-pic", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        })
+        .then((res) => {
+          this.message = res.data.message || "Profile picture updated!";
+          this.messageClass = "alert-success";
+
+          // refresh image from backend
+          this.form.profile_pic_url = `http://localhost:3001/profile-pic/${this.form.user_id}?t=${Date.now()}`;
+          this.previewImage = null;
+        })
+        .catch((err) => {
+          console.error("Error uploading:", err);
+          this.message =
+            err.response?.data?.error || "Failed to upload image.";
+          this.messageClass = "alert-danger";
+          this.previewImage = null;
+        });
+    },
+
+async updateProfile() {
+  try {
+    // check if password fields are filled
+    if (this.form.currentPassword && this.form.newPassword) {
+      const passwordData = {
+        oldPassword: this.form.currentPassword,
+        newPassword: this.form.newPassword,
+      };
+
+      const res = await axios.post(
+        "http://localhost:3001/settings/update-password",
+        passwordData,
+        { withCredentials: true }
+      );
+
+      this.message = res.data.message || "Password changed successfully!";
+      this.messageClass = "alert-success";
+      this.form.currentPassword = "";
+      this.form.newPassword = "";
+    } else {
+      this.message = "Please fill in both password fields.";
+      this.messageClass = "alert-warning";
+    }
+  } catch (error) {
+    console.error("Error updating password:", error);
+    this.message =
+      error.response?.data?.error || "Failed to change password.";
+    this.messageClass = "alert-danger";
+  }
+},
   },
 };
 </script>
@@ -194,7 +265,42 @@ export default {
 .container {
   max-width: 700px;
 }
-.btn-light i {
+
+/* header layout */
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1.5rem;
+}
+
+.user-info h4 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.user-info .text-muted {
   font-size: 1rem;
+}
+
+.rounded-circle {
+  object-fit: cover;
+  border: 2px solid #ccc;
+}
+
+/* camera upload button styling */
+.upload-btn {
+  bottom: 5px;
+  right: 10px;
+  border-radius: 50%;
+  padding: 5px 7px;
+  background-color: white;
+  border: 1px solid #ccc;
+  transition: 0.2s;
+}
+
+.upload-btn:hover {
+  background-color: #f8f9fa;
+  transform: scale(1.05);
 }
 </style>

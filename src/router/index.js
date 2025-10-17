@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 // ✅ User components
 import DashboardPage from "../layouts/DashboardPage.vue";
@@ -21,7 +22,7 @@ import AdminProfile from "../views/admin/AdminProfile.vue";
 import UserPage from "../views/admin/UserPage.vue";
 import AdminDashboard from "../views/admin/AdminDashboard.vue";
 import LockerRentForm from "../views/admin/LockerRentForm.vue";
-import ProgramStudents from "../views/admin/ProgramStudents.vue"; // ✅ new import
+import ProgramStudents from "../views/admin/ProgramStudents.vue";
 
 const routes = [
   // ✅ Login
@@ -111,18 +112,31 @@ const router = createRouter({
   routes,
 });
 
-// // ✅ Auth Guard
+// ✅ Auth Guard
 // router.beforeEach((to, from, next) => {
 //   const token = localStorage.getItem("authToken");
-//   const userRole = localStorage.getItem("userRole");
+//   const userRole = localStorage.getItem("userRole")?.toLowerCase(); // normalize case
 
+//   // if route requires login but user has no token
 //   if (to.meta.requiresAuth && !token) {
-//     next({ name: "Login" });
-//   } else if (to.meta.role && to.meta.role !== userRole) {
-//     next({ name: "Login" });
-//   } else {
-//     next();
+//     return next({ name: "Login" });
 //   }
+
+//   // if logged in but wrong role for route
+//   if (to.meta.role && to.meta.role.toLowerCase() !== userRole) {
+//     return next({ name: "Login" });
+//   }
+
+//   // if already logged in and tries to visit login or create-account
+//   if ((to.name === "Login" || to.name === "CreateAccount") && token) {
+//     if (userRole === "admin") {
+//       return next("/TestDashboard/admin-dashboard");
+//     } else if (userRole === "student" || userRole === "client") {
+//       return next("/dashboard/user-locker");
+//     }
+//   }
+
+//   return next();
 // });
 
 export default router;

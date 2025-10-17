@@ -34,13 +34,13 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label fw-semibold" for="studentId">STUDENT ID:</label>
+          <label class="form-label fw-semibold" for="studentId">USERNAME:</label>
           <input
             id="studentId"
             type="text"
             class="form-control"
             v-model="studentId"
-            placeholder="Enter Student ID"
+            placeholder="Enter Username"
             required
             :disabled="isLoading"
           />
@@ -133,7 +133,7 @@ const signIn = async () => {
       successMessage.value = "Login successful! Redirecting...";
 
       setTimeout(() => {
-        if (role === "admin") {
+        if (role.toLowerCase() === "admin") {
           router.push("/TestDashboard/admin-dashboard");
         } else {
           router.push("/dashboard/user-locker");
@@ -166,17 +166,17 @@ const goToSignUp = () => {
 };
 
 // AUTO-REDIRECT IF ALREADY LOGGED IN
-const checkAuthStatus = () => {
-  const token = localStorage.getItem("authToken");
-  if (token) {
-    const userRole = localStorage.getItem("userRole");
-    if (userRole === "admin") {
-      router.push("/TestDashboard/admin-dashboard");
-    } else {
-      router.push("/dashboard/user-locker");
-    }
-  }
-};
+// const checkAuthStatus = () => {
+//   const token = localStorage.getItem("authToken");
+//   if (token) {
+//     const userRole = localStorage.getItem("userRole");
+//     if (userRole === "admin") {
+//       router.push("/TestDashboard/admin-dashboard");
+//     } else {
+//       router.push("/dashboard/user-locker");
+//     }
+//   }
+// };
 
-checkAuthStatus();
+// checkAuthStatus();
 </script>
