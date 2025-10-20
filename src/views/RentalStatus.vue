@@ -16,7 +16,7 @@
             <div class="left-section w-50">
               <div class="d-flex flex-column align-items-center mb-3">
                 <img
-                  src="@/assets/user.png"
+                  :src="profile.profile_pic_url || require('@/assets/user.png')"
                   alt="Profile"
                   class="rounded-circle border mb-2"
                   width="70"
@@ -74,33 +74,56 @@ export default {
   name: "RentStatus",
   data() {
     return {
-      rentals: []
+      rentals: [],
+      profile: {
+        user_id: "",
+        profile_pic_url: "",
+      },
     };
   },
   methods: {
     async fetchRentals() {
       try {
-        const res = await axios.get("http://localhost:3001/rent-status");
+        const res = await axios.get("http://localhost:3001/rent-status", {
+          withCredentials: true,
+        });
         this.rentals = res.data;
       } catch (err) {
         console.error("Error fetching rent status:", err);
       }
     },
+
+    async fetchProfile() {
+      try {
+        const res = await axios.get("http://localhost:3001/settings", {
+          withCredentials: true,
+        });
+        if (res.data.user) {
+          this.profile.user_id = res.data.user.user_id;
+          this.profile.profile_pic_url = `http://localhost:3001/profile-pic/${res.data.user.user_id}`;
+        }
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      }
+    },
+
     formatDate(dateStr) {
       if (!dateStr) return "—";
       const date = new Date(dateStr);
       return date.toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
-        day: "numeric"
+        day: "numeric",
       });
-    }
+    },
   },
   mounted() {
     this.fetchRentals();
-  }
+    this.fetchProfile();
+  },
 };
 </script>
+
 
 <style scoped>
 /* Card style */

@@ -147,10 +147,18 @@
                 <div v-if="qrResult" class="text-center mt-3">
                   <p class="fw-semibold text-success">Scan to Pay (₱{{ qrResult.amount_due }})</p>
                   <img
-                    :src="`http://localhost:3001${qr_download}`" alt="gcash qr"
+                    :src="`http://localhost:3001${qrResult.qr_download}`"
                     class="img-fluid border p-2"
                     style="max-width: 250px;"
                   />
+
+                  <!-- ✅ download button -->
+                   <button
+  @click="downloadQrCode"
+  class="btn btn-outline-primary mt-3"
+>
+  <i class="bi bi-download me-2"></i> download qr code
+</button>
                 </div>
 
                 <!-- buttons -->
@@ -370,6 +378,32 @@ export default {
     goToPage(page) {
       this.currentPage = page;
     },
+    async downloadQrCode() {
+      if (!this.qrResult?.qr_download) return;
+      const imageUrl = `http://localhost:3001${this.qrResult.qr_download}`;
+      const fileName = `locker_${this.selectedLocker.locker_number}_qr.png`;
+      
+      try {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        window.URL.revokeObjectURL(url);
+
+        // optional toast/alert
+        alert("qr code downloaded successfully!");
+      } catch (error) {
+        console.error("error downloading qr code:", error);
+        alert("failed to download qr code. please try again.");
+      }
+    }
   },
   mounted() {
     this.fetchLockers();

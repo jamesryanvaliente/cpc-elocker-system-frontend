@@ -6,7 +6,7 @@
         <h4 class="mb-3">Support Tickets</h4>
 
         <!-- Add Ticket Form -->
-        <div class="card mb-3">
+        <div class="card mb-3 position-relative">
           <div
             class="card-header d-flex justify-content-between align-items-center"
             @click="showForm = !showForm"
@@ -16,27 +16,32 @@
             <i :class="showForm ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
           </div>
 
-          <div v-show="showForm" class="card-body">
-            <div class="mb-2">
-              <label class="form-label">Subject</label>
-              <input v-model="newTicket.subject" class="form-control" placeholder="Enter subject" />
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Request</label>
-              <input v-model="newTicket.request" class="form-control" placeholder="Enter request" />
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Description</label>
-              <textarea
-                v-model="newTicket.description"
-                class="form-control"
-                rows="3"
-                placeholder="Enter description"
-              ></textarea>
-            </div>
-            <button class="btn btn-primary w-100" @click="submitTicket">Submit</button>
+        <!-- ✅ overlay dropdown with smooth animation -->
+        <transition name="dropdown">
+          <div
+            v-show="showForm"
+            class="card-body dropdown-overlay shadow"
+          >
+          <div class="mb-2">
+            <label class="form-label">Subject</label>
+            <input v-model="newTicket.subject" class="form-control" placeholder="Enter subject" />
           </div>
+          <div class="mb-2">
+            <label class="form-label">Request</label>
+            <input v-model="newTicket.request" class="form-control" placeholder="Enter request" />
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Description</label>
+            <textarea
+            v-model="newTicket.description"
+            class="form-control"
+            rows="3"
+            placeholder="Enter description"></textarea>
+          </div>
+          <button class="btn btn-primary w-100" @click="submitTicket">Submit</button>
         </div>
+      </transition>
+    </div>
 
         <!-- Filter -->
         <div class="mb-3">
@@ -49,21 +54,23 @@
 
         <!-- Ticket list -->
         <ul class="list-group">
-          <li
+          <transition-group name="list" tag="div">
+            <li
             v-for="ticket in filteredTickets"
             :key="ticket.ticket_id"
             class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
             :class="{ active: selectedTicket && selectedTicket.ticket_id === ticket.ticket_id }"
             @click="selectTicket(ticket)"
-          >
+            >
             <div>
               <strong>{{ ticket.subject }}</strong><br />
               <small>Status: {{ ticket.status || ticket.ticket_status }}</small>
             </div>
             <!-- <span class="badge bg-primary rounded-pill">
               {{ ticket.priority || "N/A" }}
-            </span> -->
-          </li>
+              </span> -->
+            </li>
+          </transition-group>
         </ul>
       </div>
 
@@ -291,4 +298,49 @@ onMounted(fetchTickets);
   background-color: #0d6efd;
   color: white;
 }
+
+/* smooth fade + slide animation */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.25s ease;
+}
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+.dropdown-enter-to,
+.dropdown-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* overlay style */
+.dropdown-overlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-top: none;
+  z-index: 10;
+}
+
+/* list item fade/slide animation */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+.list-enter-to,
+.list-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 </style>
