@@ -221,6 +221,17 @@
         Next ›
       </button>
     </div>
+    <!-- loading overlay -->
+<div
+  v-if="isLoading"
+  class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+  style="background: rgba(255,255,255,0.8); z-index: 9999;"
+>
+  <div class="text-center">
+    <div class="spinner-border text-primary mb-3" role="status"></div>
+    <p class="fw-semibold text-primary">processing payment, please wait...</p>
+  </div>
+</div>
   </div>
 </template>
 
@@ -245,6 +256,7 @@ export default {
       },
       qrResult: null,
       ratePerMonth: 60, // ₱60 per month
+      isLoading: false,
     };
   },
   computed: {
@@ -326,49 +338,93 @@ export default {
       this.form = { action_type: "", months: 1, paid_months: 0, payment_method: "" };
     },
     async submitLockerAction() {
-      if (!this.form.action_type || !this.form.payment_method) {
-        alert("please fill in all required fields");
+    // if qr already generated → redirect on second confirm
+    if (this.qrResult && this.form.payment_method === "qr") {
+  this.isLoading = true; // show loading overlay first
+
+  // small async pause to let vue update before redirect
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  try {
+    // optional: confirm payment on backend first
+    await axios.post("http://localhost:3001/locker/payments", {
+      locker_id: this.selectedLocker?.locker_id || this.qrResult.locker_id,
+      payment_method: "qr",
+    }, { withCredentials: true });
+
+    // success message
+    alert("payment confirmed successfully! redirecting...");
+  } catch (error) {
+    console.error("payment confirmation failed:", error);
+    alert("failed to confirm payment, please try again.");
+  } finally {
+    setTimeout(() => {
+      this.isLoading = false;
+      this.selectedLocker = null;
+      this.$router.push("/dashboard/user-rental"); // ✅ redirect after short delay
+    }, 1500);
+  }
+
+  return;
+}
+    
+    if (!this.form.action_type || !this.form.payment_method) {
+      alert("please fill in all required fields");
+      return;
+    }
+
+    try {
+      const locker_id = this.selectedLocker.locker_id;
+      let url = "";
+      let payload = {};
+
+      if (this.form.action_type === "rent") {
+        url = "http://localhost:3001/locker/transaction";
+        payload = {
+          locker_id,
+          months: this.form.months,
+          paid_months: this.form.paid_months,
+          payment_method: this.form.payment_method,
+          action_type: "rent",
+        };
+      } else {
+        url = "http://localhost:3001/transaction";
+        payload = {
+          locker_id,
+          payment_method: this.form.payment_method,
+          action_type: "reserve",
+        };
+      }
+
+      const response = await axios.post(url, payload, { withCredentials: true });
+
+      // if (response.data.qr_download) {
+      //   this.qrResult = response.data;
+      //   // alert("qr code generated! scan it and click confirm again to proceed.");
+      //   return;
+      // }
+      if (response.data.qr_download) {
+        const lockerId = this.selectedLocker.locker_id;
+        this.selectedLocker = null;
+        this.$router.push(`/qr-process/${lockerId}`);
         return;
       }
 
-      try {
-        const locker_id = this.selectedLocker.locker_id;
-        let url = "";
-        let payload = {};
+      alert(response.data.message || "locker action successful!");
+      this.selectedLocker = null;
+      this.fetchLockers();
 
-        if (this.form.action_type === "rent") {
-          url = "http://localhost:3001/locker/transaction";
-          payload = {
-            locker_id,
-            months: this.form.months,
-            paid_months: this.form.paid_months,
-            payment_method: this.form.payment_method,
-            action_type: "rent",
-          };
-        } else {
-          url = "http://localhost:3001/transaction";
-          payload = {
-            locker_id,
-            payment_method: this.form.payment_method,
-            action_type: "reserve",
-          };
-        }
-
-        const response = await axios.post(url, payload, { withCredentials: true });
-
-        if (response.data.qr_download) {
-          this.qrResult = response.data;
-        } else {
-          alert(response.data.message || "locker action successful!");
-          this.selectedLocker = null;
-          this.fetchLockers();
-        }
-      } catch (error) {
-        console.error("locker transaction failed:", error);
-        const msg = error.response?.data?.error || "something went wrong.";
-        alert(msg);
-      }
-    },
+      this.isLoading = true;
+      setTimeout(() => {
+        this.isLoading = false;
+        this.$router.push("/dashboard/user-rental");
+      }, 2000);
+    } catch (error) {
+      console.error("locker transaction failed:", error);
+      const msg = error.response?.data?.error || "something went wrong.";
+      alert(msg);
+    }
+  },
     nextPage() {
       if (this.currentPage < this.totalPages) this.currentPage++;
     },

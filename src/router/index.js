@@ -10,6 +10,7 @@ import SupportPage from "../views/SupportPage.vue";
 import RentalStatus from "../views/RentalStatus.vue";
 import ClientLocker from "../views/ClientLocker.vue";
 import ClientRentForm from "../views/ClientRentForm.vue";
+import QrProcessPage from "../views/QrProcessPage.vue";
 
 // ✅ Admin components
 import TestDashboard from "../layouts/TestDashboard.vue";
@@ -29,6 +30,7 @@ const routes = [
   { path: "/login", name: "Login", component: LoginPage },
   { path: "/create-account", name: "CreateAccount", component: CreateAccount },
   { path: "/", redirect: "/login" },
+  { path: '/qr-process/:locker_id', name: 'QrProcess', component: QrProcessPage, meta: { hidden: true } },
 
   // ✅ User dashboard layout
   {
