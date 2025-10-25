@@ -19,16 +19,40 @@
 
       <div v-if="qrData" class="mt-4">
         <button @click="downloadQrCode" class="btn btn-outline-primary">
-          <i class="bi bi-download me-2"></i> download qr code
+          <i class="bi bi-download me-2"></i> Download qr code
         </button>
       </div>
 
       <!-- upload receipt -->
-      <div v-if="qrData" class="mt-5">
-        <h5 class="fw-semibold mb-3">upload your payment receipt</h5>
-        <input type="file" @change="onFileChange" accept="image/*" class="form-control w-50 mx-auto mb-3" />
-        <button @click="uploadReceipt" :disabled="!receiptFile" class="btn btn-success">
-          upload receipt
+       <div v-if="qrData" class="mt-5">
+        <h5 class="fw-semibold mb-3">Upload your payment receipt</h5>
+  
+        <!-- reference number input -->
+         <div class="mb-3 w-50 mx-auto text-start">
+          <label class="form-label fw-semibold">Reference number</label>
+          <input
+          v-model="referenceNumber"
+          type="text"
+          maxlength="20" 
+          placeholder="Enter gcash reference number"
+          class="form-control"
+          required
+          />
+        </div>
+
+        <!-- receipt upload -->
+         <input
+         type="file"
+         @change="onFileChange"
+         accept="image/*"
+         class="form-control w-50 mx-auto mb-3"
+         />
+
+         <button
+         @click="uploadReceipt"
+         :disabled="!receiptFile || !referenceNumber"
+         class="btn btn-success">
+         upload receipt
         </button>
       </div>
 
@@ -65,6 +89,7 @@ export default {
       loadingText: "generating your qr code, please wait...",
       receiptFile: null,
       receiptBase64: '',
+      referenceNumber: '',
       uploadMsg: "",
       showModal: false,
       months: 1,
@@ -160,13 +185,19 @@ methods: {
     alert("please select a receipt image first.");
     return;
   }
+  if (!this.referenceNumber.trim()) {
+    alert("please enter your gcash reference number.");
+    return;
+  }
 
   try {
     const token = localStorage.getItem('token');
     const formData = {
       rental_id: this.rentalId,
-      receipt: this.receiptBase64, // base64 data only
+      receipt: this.receiptBase64,
       amount_paid_now: this.amountToPay,
+      payment_method: "qr",
+      reference_number: this.referenceNumber.trim(),
     };
 
     const res = await axios.post('http://localhost:3001/locker/payments', formData, {

@@ -63,7 +63,7 @@
               <span
                 :class="t.payment_method === 'cash' ? 'badge bg-success' : 'badge bg-info'"
               >
-                {{ t.payment_method === 'cash' ? 'N/A' : (t.reference_number || '-') }}
+                {{ t.payment_method  || '-' }}
               </span>
             </td>
             <td>{{ t.reference_number || '-' }}</td>
@@ -94,8 +94,8 @@
           <div class="modal-body text-center">
             <img
               :src="receiptImage"
-              alt="Receipt"
               class="img-fluid rounded shadow"
+              alt="Receipt"
               style="max-height: 600px"
             />
           </div>
@@ -172,8 +172,9 @@ const filteredData = computed(() => {
 })
 
 // ✅ view receipt
-const viewReceipt = path => {
-  receiptImage.value = `${API_BASE}/uploads/${path}`
+const viewReceipt = (base64Data) => {
+  receiptImage.value = base64Data
+  // receiptImage.value = `${API_BASE}/uploads/${path}`
   showModal.value = true
 }
 
