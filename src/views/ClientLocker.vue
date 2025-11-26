@@ -96,31 +96,44 @@
 
                 <!-- rent fields -->
                 <div v-if="form.action_type === 'rent'">
-                  <div class="mb-3">
+                  <!-- payment method -->
+                   <div class="mb-3 mt-3">
+                    <label class="form-label">Payment Method:</label>
+                    <select v-model="form.payment_method" class="form-select" required>
+                      <option disabled value="">select</option>
+                      <option value="cash">Cash</option>
+                      <option value="qr">QR (GCash)</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-3" v-if="form.payment_method === 'qr'|| form.payment_method === 'cash'">
                     <label class="form-label">Number of Months:</label>
                     <input
                       v-model.number="form.months"
-                      type="number"
+                      type="number" 
                       class="form-control"
                       min="1"
                       required
                     />
                   </div>
 
-                  <div class="mb-3">
+                  <!-- months paid field (only for QR) -->
+                  <div v-if="form.payment_method === 'qr'" class="mb-3">
                     <label class="form-label">Months Paid:</label>
                     <input
-                      v-model.number="form.paid_months"
-                      type="number"
-                      class="form-control"
-                      min="0"
-                      :max="form.months"
-                      required
-                    />
+                    v-model.number="form.paid_months" type="number" class="form-control" min="0"
+                    :max="form.months" required/>
+                  </div>
+
+                  <!-- auto calculation (only for QR) -->
+                   <div v-if="form.payment_method === 'qr' && form.paid_months > 0" class="mt-3">
+                    <p class="fw-semibold text-primary mb-1">Amount to Pay: ₱{{ computedAmountPaid }}</p>
+                    <p class="text-secondary mb-1">Remaining Balance: ₱{{ computedBalance }}</p>
+                    <p class="text-muted">Due Date: {{ computedDueDate }}</p>
                   </div>
 
                   <!-- auto calculation -->
-                  <div v-if="form.paid_months > 0" class="mt-3">
+                  <!-- <div v-if="form.paid_months > 0" class="mt-3">
                     <p class="fw-semibold text-primary mb-1">
                       Amount to Pay: ₱{{ computedAmountPaid }}
                     </p>
@@ -130,17 +143,7 @@
                     <p class="text-muted">
                       Due Date: {{ computedDueDate }}
                     </p>
-                  </div>
-                </div>
-
-                <!-- payment method -->
-                <div class="mb-3 mt-3" v-if="form.action_type === 'rent'">
-                  <label class="form-label">Payment Method:</label>
-                  <select v-model="form.payment_method" class="form-select" required>
-                    <option disabled value="">select</option>
-                    <option value="cash">Cash</option>
-                    <option value="qr">QR (GCash)</option>
-                  </select>
+                  </div> -->
                 </div>
 
                 <!-- qr result -->
@@ -154,11 +157,11 @@
 
                   <!-- ✅ download button -->
                    <button
-  @click="downloadQrCode"
-  class="btn btn-outline-primary mt-3"
->
-  <i class="bi bi-download me-2"></i> download qr code
-</button>
+                   @click="downloadQrCode"
+                   class="btn btn-outline-primary mt-3"
+                   >
+                   <i class="bi bi-download me-2"></i> download qr code
+                  </button>
                 </div>
 
                 <!-- buttons -->
@@ -278,7 +281,7 @@ export default {
       showConfirmModal: false,
       currentPage: 1,
       lockerIcon,
-      letters: ["A", "B", "C", "D"],
+      letters: ["A","B","C","D","E",],
       form: {
         action_type: "",
         months: 1,
@@ -337,6 +340,13 @@ export default {
         day: "numeric",
       });
     },
+  },
+  watch: {
+    "form.payment_method"(newValue) {
+      if (newValue === "cash") {
+        this.form.paid_months = 0;
+      }
+    }
   },
   methods: {
     async fetchLockers() {
@@ -429,6 +439,8 @@ export default {
           locker_id,
           months: this.form.months,
           paid_months: this.form.paid_months,
+          paid_amount: this.computedAmountPaid,
+          balance: this.computedBalance,
           payment_method: this.form.payment_method,
           action_type: "rent",
         };
@@ -531,6 +543,8 @@ export default {
           locker_id,
           months: this.form.months,
           paid_months: this.form.paid_months,
+          paid_amount: this.computedAmountPaid,
+          balance: this.computedBalance,
           payment_method: this.form.payment_method,
           action_type: "rent",
         };

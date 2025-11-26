@@ -101,7 +101,7 @@
                     :class="[
                       'd-inline-block p-2 rounded',
                       msg.sender === 'Student'
-                        ? 'bg-primary text-white'
+                        ? 'bg-primary text-white-50'
                         : 'bg-light border'
                     ]"
                     style="max-width: 70%;"

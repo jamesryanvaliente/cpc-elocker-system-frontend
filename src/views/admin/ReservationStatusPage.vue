@@ -2,6 +2,7 @@
   <div class="container py-4">
     <h2 class="text-center fw-bold mb-4 text-primary">RESERVATION DETAILS</h2>
 
+    <!-- 🔍 Search -->
     <div class="d-flex justify-content-center mb-4">
       <div class="input-group shadow-sm rounded" style="width: 380px">
         <input
@@ -17,95 +18,133 @@
       </div>
     </div>
 
+    <!-- 🖥 TABLE VIEW -->
     <div class="table-container shadow-lg bg-white rounded-4 p-3 d-none d-xl-block">
       <table class="table table-hover align-middle text-center mb-0">
         <thead class="table-header">
           <tr>
-            <th>Rental ID</th>
-            <th>Locker Number</th>
-            <th>Location (Course)</th>
+            <th>Student ID</th>
+            <th>Student Name</th>
+            <th>Locker No.</th>
+            <!-- <th>Rental Status</th> -->
+            <th>Course</th>
+            <th>Payment Method</th>
+            <th>Reference </th>
+            <th>Amount</th>
             <th>Status</th>
+            <th>Receipt</th>
             <th>Actions</th>
           </tr>
         </thead>
 
-        <tbody>
-          <tr v-for="rental in filteredRentals" :key="rental.rental_id">
-            <td>{{ rental.rental_id }}</td>
-            <td>{{ rental.locker_number }}</td>
-            <td>{{ rental.course_name }}</td>
-            <td>
-              <span
-                :class="[
-                  'badge status-badge',
-                  rental.status?.toLowerCase() === 'pending'
-                    ? 'bg-warning text-dark'
-                    : rental.status?.toLowerCase() === 'reserved'
-                    ? 'bg-info text-dark'
-                    : rental.status?.toLowerCase() === 'active'
-                    ? 'bg-success'
-                    : 'bg-danger',
-                ]"
-              >
-                {{ rental.status }}
-              </span>
-            </td>
-            <td>
-              <div class="d-flex justify-content-center gap-2">
-                <button
-                  class="btn btn-approve shadow-sm"
-                  @click="approveReservation(rental.rental_id)"
-                  :disabled="rental.status?.toLowerCase() === 'active'"
-                >
-                  <i class="bi bi-check-circle me-1"></i> Approve
-                </button>
-                <button
-                  class="btn btn-cancel shadow-sm"
-                  @click="cancelRental(rental.rental_id)"
-                  :disabled="rental.status?.toLowerCase() === 'active'"
-                >
-                  <i class="bi bi-x-circle me-1"></i> Cancel
-                </button>
-              </div>
-            </td>
-          </tr>
+<tbody>
+  <tr v-for="rental in filteredRentals" :key="rental.rental_id">
+    <td>{{ rental.stud_id }}</td>
+    <td>
+      {{ rental.f_name }} 
+      <span v-if="rental.m_name"> {{ rental.m_name.charAt(0) }}.</span>
+      {{ rental.l_name }}
+    </td>
+    <td>{{ rental.locker_number }}</td>
+    <!-- <td>{{ rental.status }}</td> -->
+    <td>{{ rental.course_name }}</td>
+    <td>
+      <span class="badge bg-secondary">
+        {{ rental.pay_method ? rental.pay_method : (rental.payment_method || 'cash') }}
+      </span>
+    </td>
+    <td>{{ rental.reference_number || '—' }}</td>
+    <td>{{ rental.amount_paid ? `₱${Number(rental.amount_paid).toFixed(2)}` : '—' }}</td>
+    <td>
+      <span
+      :class="[
+        'badge status-badge',
+        rental.status?.toLowerCase() === 'pending' ? 'bg-warning text-dark' :
+        rental.status?.toLowerCase() === 'reserved' ? 'bg-info text-dark' :
+        rental.status?.toLowerCase() === 'active' ? 'bg-success' :
+        rental.status?.toLowerCase() === 'follow-up' ? 'bg-primary text-white' :
+        // rental.status?.toLowerCase() === 'expired' ? 'bg-danger text-white' :
+        'bg-danger'
+        ]"
+        >
+        {{ rental.status }}
+      </span>
+    </td>
+    <td>
+      <button
+        v-if="rental.receipt_path"
+        class="btn btn-sm btn-outline-primary"
+        @click="viewReceipt(rental.receipt_path)"
+      >
+        view
+      </button>
+      <span v-else class="text-muted">—</span>
+    </td>
+    <td>
+      <div class="d-flex justify-content-center gap-2">
+        <button
+          class="btn btn-approve shadow-sm"
+          @click="approveReservation(rental.rental_id)"
+          :disabled="rental.status?.toLowerCase() === 'active'"
+        >
+          <i class="bi bi-check-circle me-1"></i> Approve
+        </button>
+        <button
+          class="btn btn-cancel shadow-sm"
+          @click="cancelRental(rental.rental_id)"
+          :disabled="rental.status?.toLowerCase() === 'active'"
+        >
+          <i class="bi bi-x-circle me-1"></i> Cancel
+        </button>
+      </div>
+    </td>
+  </tr>
+</tbody>
 
-          <tr v-if="filteredRentals.length === 0">
-            <td colspan="5" class="text-muted fst-italic py-4">No rentals found</td>
-          </tr>
-        </tbody>
       </table>
     </div>
 
+    <!-- 📱 CARD VIEW (Mobile) -->
     <div class="card-container d-xl-none">
       <div class="scrollable-cards">
         <div
           v-for="rental in filteredRentals"
           :key="rental.rental_id"
           class="rental-card shadow-sm"
-          @click="openDetailsModal(rental)"
         >
           <div class="card-row">
-            <div><strong>ID:</strong> {{ rental.rental_id }}</div>
-            <div><strong>Locker:</strong> {{ rental.locker_number }}</div>
-            <div>
-              <strong>Status:</strong>
-              <span
-                :class="[
-                  'badge status-badge-sm',
-                  rental.status?.toLowerCase() === 'pending'
-                    ? 'bg-warning text-dark'
-                    : rental.status?.toLowerCase() === 'reserved'
-                    ? 'bg-info text-dark'
-                    : rental.status?.toLowerCase() === 'active'
-                    ? 'bg-success'
-                    : 'bg-danger',
-                ]"
-              >
-                {{ rental.status }}
-              </span>
-            </div>
-          </div>
+  <div><strong>ID:</strong> {{ rental.student_id || rental.user_id }}</div>
+  <div><strong>Name:</strong> {{ rental.student_name || `${rental.first_name} ${rental.last_name}` }}</div>
+  <div><strong>Locker:</strong> {{ rental.locker_number }}</div>
+  <div><strong>Course:</strong> {{ rental.course_name }}</div>
+  <div><strong>Method:</strong> {{ rental.pay_method || rental.payment_method }}</div>
+  <div><strong>Status:</strong>
+    <span
+      :class="[
+        'badge status-badge-sm',
+        rental.status?.toLowerCase() === 'pending'
+          ? 'bg-warning text-dark'
+          : rental.status?.toLowerCase() === 'reserved'
+          ? 'bg-info text-dark'
+          : rental.status?.toLowerCase() === 'active'
+          ? 'bg-success'
+          : 'bg-danger',
+      ]"
+    >
+      {{ rental.status }}
+    </span>
+  </div>
+  <div>
+    <button
+      v-if="rental.receipt_path"
+      class="btn btn-sm btn-outline-primary w-100 mt-2"
+      @click="viewReceipt(rental.receipt_path)"
+    >
+      View Receipt
+    </button>
+  </div>
+</div>
+
         </div>
       </div>
       <p v-if="filteredRentals.length === 0" class="text-center text-muted fst-italic py-4">
@@ -113,188 +152,369 @@
       </p>
     </div>
 
-    <div
-      class="modal fade"
-      id="detailsModal"
-      tabindex="-1"
-      aria-hidden="true"
-      ref="detailsModalRef"
-    >
-      <div class="modal-dialog modal-dialog-centered">
+    <!-- 🧾 RECEIPT MODAL -->
+    <div v-if="showModal" class="modal fade show d-block" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title">
-              Rental #{{ selectedRental?.rental_id }}
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <div class="modal-header">
+            <h5 class="modal-title">Payment Receipt</h5>
+            <button type="button" class="btn-close" @click="showModal = false"></button>
           </div>
-          <div class="modal-body">
-            <p><strong>Locker Number:</strong> {{ selectedRental?.locker_number }}</p>
-            <p><strong>Location (Course):</strong> {{ selectedRental?.course_name }}</p>
-            <p>
-              <strong>Status:</strong>
-              <span
-                :class="[
-                  'badge status-badge',
-                  selectedRental?.status?.toLowerCase() === 'pending'
-                    ? 'bg-warning text-dark'
-                    : selectedRental?.status?.toLowerCase() === 'reserved'
-                    ? 'bg-info text-dark'
-                    : selectedRental?.status?.toLowerCase() === 'active'
-                    ? 'bg-success'
-                    : 'bg-danger',
-                ]"
-              >
-                {{ selectedRental?.status }}
-              </span>
-            </p>
-            
-            <hr />
-
-            <div class="d-flex justify-content-center gap-2">
-              <button
-                class="btn btn-approve w-50"
-                @click="approveReservationFromModal"
-                :disabled="selectedRental?.status?.toLowerCase() === 'active'"
-              >
-                <i class="bi bi-check-circle me-1"></i> Approve
-              </button>
-              <button
-                class="btn btn-cancel w-50"
-                @click="cancelRentalFromModal"
-                :disabled="selectedRental?.status?.toLowerCase() === 'active'"
-              >
-                <i class="bi bi-x-circle me-1"></i> Cancel
-              </button>
-            </div>
+          <div class="modal-body text-center">
+            <img
+              :src="receiptImage"
+              class="img-fluid rounded shadow"
+              alt="Receipt"
+              style="max-height: 600px"
+            />
           </div>
         </div>
       </div>
     </div>
+    <div v-if="showModal" class="modal-backdrop fade show"></div>
   </div>
+
+  <!-- 🟦 APPROVE (CASH) — INPUT MONTHS PAID MODAL -->
+<div v-if="showCashModal" class="modal fade show d-block" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Enter Months Paid</h5>
+        <button type="button" class="btn-close" @click="closeCashModal"></button>
+      </div>
+
+      <div class="modal-body">
+        <label class="form-label">Months Paid:</label>
+        <input
+          v-model.number="cashMonthsPaid"
+          type="number"
+          class="form-control"
+          min="1"
+          required
+        />
+
+        <div v-if="selectedRentalId" class="text-success small mt-2">
+          ₱{{ cashAmount.toFixed(2) }} (with {{ cashMonthsPaid }} month(s) added)
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" @click="closeCashModal">Cancel</button>
+        <button class="btn btn-primary" @click="confirmCashApproval">Submit</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div v-if="showCashModal" class="modal-backdrop fade show"></div>
+
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import axios from "axios";
-import * as bootstrap from "bootstrap"; // Ensure bootstrap is imported
 
 const rentals = ref([]);
 const searchQuery = ref("");
-// 🆕 Added for Card View
-const selectedRental = ref(null);
-const detailsModalRef = ref(null);
-let detailsModalInstance = null;
+const showModal = ref(false);
+const receiptImage = ref("");
 
-// 🧭 Fetch all pending rentals
+const showCashModal = ref(false);
+const cashMonthsPaid = ref(0);
+const selectedRentalId = ref(null);
+
+// const selectedRental = ref(null);
+
 const fetchPendingRentals = async () => {
   try {
-    const token = localStorage.getItem("token");
-    let url = "http://localhost:3001/pending-rentals";
-    
-    // 💡 Fetching with search query if present
-    if (searchQuery.value.trim()) {
-        url += `?search=${searchQuery.value.trim()}`;
-    }
+    const token = localStorage.getItem("authToken");
 
-    const res = await axios.get(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const [rentalsRes, followUpsRes] = await Promise.all([
+      axios.get("http://localhost:3001/pending-rentals", { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get("http://localhost:3001/pending-follow-up", { headers: { Authorization: `Bearer ${token}` } })
+    ]);
 
-    if (Array.isArray(res.data.records)) {
-      rentals.value = res.data.records;
-    } else {
-      console.warn("⚠️ Unexpected API format:", res.data);
-      rentals.value = [];
-    }
+    const pendingRentals = Array.isArray(rentalsRes.data.records) ? rentalsRes.data.records : [];
+    const pendingFollowUps = Array.isArray(followUpsRes.data.payments) ? followUpsRes.data.payments : [];
+
+    // console.log('Follow-ups received:', pendingFollowUps); //debug
+
+    // normalize follow-up payments to match rental fields
+    const normalizedFollowUps = pendingFollowUps.map(p => ({
+      rental_id: p.rental_id,
+      payment_id: p.payment_id,
+      stud_id: p.student_id,
+      f_name: p.student_name.split(' ')[0],
+      m_name: p.student_name.split(' ').length === 3 ? p.student_name.split(' ')[1] : '',
+      l_name: p.student_name.split(' ').slice(-1)[0],
+      locker_number: p.locker_number,
+      course_name: p.course,
+      pay_method: p.payment_method,
+      reference_number: p.reference_number,
+      amount_paid: p.amount_paid,
+      status: 'follow-up', // special status for follow-up payments
+      rental_status: p.current_rental_status || 'unknown',
+      receipt_path: p.receipt_path || null,
+      payment_date: p.payment_date
+    }));
+
+    rentals.value = [...pendingRentals, ...normalizedFollowUps]
+      .sort((a, b) => new Date(b.created_at || b.payment_date) - new Date(a.created_at || a.payment_date));
+
   } catch (err) {
-    console.error("Failed to fetch rentals:", err);
+    console.error("Failed to fetch rentals and follow-ups:", err);
     rentals.value = [];
   }
 };
 
-// 🔍 Filter rentals (only used if search is not passed to API)
+// const filteredRentals = computed(() => rentals.value);
 const filteredRentals = computed(() => {
-    // If search is handled by the API (which it is in fetchPendingRentals), 
-    // this computed property just returns the fetched array.
-    return rentals.value;
+  if (!searchQuery.value) return rentals.value;
+  
+  const query = searchQuery.value.toLowerCase();
+  return rentals.value.filter(r => 
+    r.locker_number?.toLowerCase().includes(query) ||
+    r.course_name?.toLowerCase().includes(query) ||
+    r.status?.toLowerCase().includes(query) ||
+    r.rental_status?.toLowerCase().includes(query)
+  );
 });
 
-// ✅ Approve reservation (fixed API route)
-const approveReservation = async (rentalId) => {
-  try {
-    const token = localStorage.getItem("token");
-    const confirmAction = confirm(`Approve reservation #${rentalId}?`);
-    if (!confirmAction) return;
+/* 🧾 open receipt modal */
+// const viewReceipt = (receiptPath) => {
+//   if (!receiptPath) return;
+//   if (receiptPath.startsWith("data:image")) {
+//     receiptImage.value = receiptPath;
+//   } else {
+//     receiptImage.value = `data:image/jpeg;base64,${receiptPath}`;
+//   }
+//   showModal.value = true;
+// };
+const viewReceipt = (receiptPath) => {
+  // 🛡️ Safety Check: If it's not a string (e.g., null, undefined, or boolean), stop.
+  if (!receiptPath || typeof receiptPath !== 'string') { 
+    console.warn("Invalid receipt data:", receiptPath);
+    return; 
+  }
 
-    const response = await axios.post(
+  // Logic: Add prefix if missing
+  if (receiptPath.startsWith("data:image")) {
+    receiptImage.value = receiptPath;
+  } else {
+    // This handles the Base64 string coming from your DB
+    receiptImage.value = `data:image/jpeg;base64,${receiptPath}`;
+  }
+  showModal.value = true;
+};
+
+const approveReservation = async (rentalId) => {
+  const rental = rentals.value.find(r => Number(r.rental_id) === Number(rentalId) || r.payment_id === rentalId);
+  if (!rental) {
+    alert("Rental not found.");
+    return;
+  }
+
+  // selectedRentalId.value = rentalId;
+  // cashMonthsPaid.value = 0;
+
+  // check payment method
+  // const method = rental.pay_method || rental.payment_method || "cash";
+
+  // check if this is a follow-up payment
+  if (rental.status === 'follow-up') {
+    // call follow-up verification endpoint
+    const confirmedAmount = rental.amount_paid;
+
+      // Show warning for expired rentals
+      if (rental.rental_status === 'expired') {
+        const confirmMsg = `⚠️ EXPIRED RENTAL PAYMENT\n\nThis payment is for an EXPIRED rental.\nApproving will reduce the balance but will NOT reactivate the locker.\n\nAmount: ₱${Number(confirmedAmount).toFixed(2)}\nLocker: ${rental.locker_number}\n\nContinue?`;
+        if (!confirm(confirmMsg)) return;
+      }
+
+    try {
+      const token = localStorage.getItem("authToken");
+      await axios.put(`http://localhost:3001/verify/${rental.payment_id}`, {
+        approve: true,
+        confirmed_amount: confirmedAmount
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      alert("Follow-up payment verified!");
+      fetchPendingRentals();
+    } catch (err) {
+      alert(err.response?.data?.error || "Follow-up approval failed");
+    }
+    return;
+  } 
+
+  // For reserved rentals (already paid via QR)
+  if (rental.status === 'reserved') {
+    if (!confirm(`Approve reserved locker #${rental.locker_number}?`)) return;
+    try {
+      const token = localStorage.getItem("authToken");
+      await axios.post(
+        "http://localhost:3001/approve-rental",
+        { rental_id: rental.rental_id, payment_method: "cash" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("Rental approved!");
+      fetchPendingRentals();
+    } catch (err) {
+      alert(err.response?.data?.error || "Rental approval failed");
+    }
+    return; // Exit early
+  }
+  // else {
+  //   // original approve logic for new rentals
+    const method = rental.pay_method || rental.payment_method || "cash";
+    // selectedRentalId.value = rental.rental_id;
+    // cashMonthsPaid.value = 0; // reset
+    if (method.toLowerCase() === "qr") {
+      try {
+        const token = localStorage.getItem("authToken");
+        await axios.post(
+          "http://localhost:3001/approve-rental",
+          { rental_id: rental.rental_id, payment_method: "qr" },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        alert("Rental approved!");
+        fetchPendingRentals();
+      } catch (err) {
+        alert(err.response?.data?.error || "Rental approval failed");
+      }
+    } else {
+      // Cash payment - show modal
+      selectedRentalId.value = rental.rental_id;
+      cashMonthsPaid.value = 0;
+      showCashModal.value = true;
+    }
+  }
+// };
+
+const cancelRental = async (rental) => {
+  // if (rental.status === 'follow-up') {
+  //   alert("Cannot cancel follow-up payments from here.");
+  //   return;
+  // }
+
+  if (rental.status === 'follow-up') {
+    if (!confirm(`Reject this follow-up payment of ₱${Number(rental.amount_paid).toFixed(2)}?`)) return;
+    
+    try {
+      const token = localStorage.getItem("authToken");
+      await axios.put(
+        `http://localhost:3001/verify/${rental.payment_id}`,
+        { 
+          approve: false,
+          verified_remarks: 'Payment rejected by admin'
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("Follow-up payment rejected!");
+      fetchPendingRentals();
+    } catch (err) {
+      alert(err.response?.data?.error || "Rejection failed");
+    }
+    return;
+  }
+
+  // original cancel logic
+  if (!confirm(`Cancel rental #${rental.rental_id}?`)) return;
+  try {
+    const token = localStorage.getItem("authToken");
+    await axios.post("http://localhost:3001/cancel-rental", { rental_id: rental.rental_id }, { headers: { Authorization: `Bearer ${token}` } });
+    alert("Rental cancelled!");
+    fetchPendingRentals();
+  } catch (err) {
+    alert(err.response?.data?.error || "Cancel failed");
+  }
+};
+
+
+const confirmCashApproval = async () => {
+  try {
+    if (cashMonthsPaid.value <= 0) {
+      alert("Enter a valid number of months.");
+      return;
+    }
+
+    const token = localStorage.getItem("authToken");
+
+    const res = await axios.post(
       "http://localhost:3001/approve-rental",
       {
-        rental_id: rentalId,
-        months: 1,
-        paid_months: 1,
+        rental_id: selectedRentalId.value,
         payment_method: "cash",
-        remarks: "Approved by admin",
+        paid_months: cashMonthsPaid.value
       },
-      { headers: { Authorization: `Bearer ${token}` } }
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
     );
 
-    alert(response.data.message || "Reservation approved successfully!");
-    detailsModalInstance?.hide(); // Hide modal if open
-    fetchPendingRentals(); // refresh list
+    alert(res.data.message || "Cash payment recorded & rental activated!");
+
+    showCashModal.value = false;
+    fetchPendingRentals();
   } catch (err) {
-    console.error("Error approving reservation:", err);
-    alert(err.response?.data?.error || "Failed to approve reservation.");
+    alert(err.response?.data?.error || "Approval failed.");
   }
 };
 
-// ❌ Cancel rental (fixed API route)
-const cancelRental = async (rentalId) => {
-  try {
-    const token = localStorage.getItem("token");
-    const confirmAction = confirm(`Cancel rental #${rentalId}?`);
-    if (!confirmAction) return;
+const monthlyRate = 60; // fixed monthly rate
+// const rentalPrice = ref({}); // store monthly cost for each rental by id
 
-    const response = await axios.post(
-      "http://localhost:3001/cancel-rental",
-      { rental_id: rentalId },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+const cashAmount = computed(() => {
+  const rental = rentals.value.find(r => Number(r.rental_id) === Number(selectedRentalId.value));
+  if (!rental) return 0;
+  return Number(rental.amount_paid || 0) + cashMonthsPaid.value * monthlyRate;
+});
 
-    alert(response.data.message || "Rental cancelled successfully!");
-    detailsModalInstance?.hide(); // Hide modal if open
-    fetchPendingRentals(); // refresh list
-  } catch (err) {
-    console.error("Error cancelling rental:", err);
-    alert(err.response?.data?.error || "Failed to cancel rental.");
-  }
-};
-
-// 🆕 Card View Functions
-const openDetailsModal = (rental) => {
-  selectedRental.value = rental;
-  if (!detailsModalInstance) {
-    detailsModalInstance = new bootstrap.Modal(detailsModalRef.value);
-  }
-  detailsModalInstance.show();
-};
-
-const approveReservationFromModal = () => {
-  if (selectedRental.value) {
-    approveReservation(selectedRental.value.rental_id);
-  }
-};
-
-const cancelRentalFromModal = () => {
-  if (selectedRental.value) {
-    cancelRental(selectedRental.value.rental_id);
-  }
+const closeCashModal = () => {
+  showCashModal.value = false;
+  selectedRentalId.value = null;
+  cashMonthsPaid.value = 0;
 };
 
 onMounted(fetchPendingRentals);
+
+// ===== WATCHER: recalc payment amount if months changed =====
+watch(cashMonthsPaid, (val) => {
+  if (!val || val <= 0) {
+    cashMonthsPaid.value = 0;
+  }
+});
 </script>
 
 <style scoped>
+.table-container {
+  max-height: 600px;
+  overflow-y: auto;
+  border-radius: 15px;
+}
+
+.table-header {
+  background: linear-gradient(135deg, #0d6efd, #007bff);
+  color: white;
+  position: sticky;
+  top: 0;
+}
+
+.btn-outline-primary {
+  border-radius: 8px;
+  border-width: 1px;
+  transition: all 0.2s ease;
+}
+.btn-outline-primary:hover {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.modal-backdrop {
+  z-index: 1040;
+}
+.modal {
+  z-index: 1050;
+}
 /* --- BASE TABLE STYLES (Desktop) --- */
 .table-container {
   max-height: 600px;
@@ -430,4 +650,10 @@ button:disabled {
     white-space: normal;
   }
 }
+
+.text-success.small {
+  font-size: 12px;
+  font-weight: 500;
+}
+
 </style>

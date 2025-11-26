@@ -23,7 +23,7 @@
       <table class="table table-hover align-middle text-center mb-0">
         <thead class="table-header">
           <tr>
-            <th style="width: 8%">ID</th>
+            <!-- <th style="width: 8%">ID</th> -->
             <th style="width: 20%">Admin</th>
             <th style="width: 45%" class="text-start">Activity</th>
             <th style="width: 14%">Date</th>
@@ -33,7 +33,7 @@
 
         <tbody>
           <tr v-for="log in tableData" :key="log.audit_id">
-            <td>{{ log.audit_id }}</td>
+            <!-- <td>{{ log.audit_id }}</td> -->
             <td>{{ log.admin_username }}</td>
             <td class="text-start activity-cell">{{ log.activity }}</td>
             <td>{{ formatDate(log.created_at) }}</td>

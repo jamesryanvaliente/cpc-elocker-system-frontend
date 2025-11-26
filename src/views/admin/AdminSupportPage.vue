@@ -289,8 +289,8 @@ const sendMessage = async () => {
       `http://localhost:3001/tickets/${selectedTicket.value.ticket_id}/reply`,
       {
         message: newMessage.value,
-        role: "admin",
-        created_at: new Date().toISOString(),
+        // role: "admin",
+        // created_at: new Date().toISOString(),
       },
       { headers: { Authorization: `Bearer ${token}` } }
     );

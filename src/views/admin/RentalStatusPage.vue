@@ -24,10 +24,10 @@
           <option value="due_date">Due Date</option>
           <option value="locker_number">Locker Number</option>
         </select>
-        <select v-model="sortOrder" class="form-select" @change="fetchRentals">
+        <!-- <select v-model="sortOrder" class="form-select" @change="fetchRentals">
           <option value="asc">ASC</option>
           <option value="desc">DESC</option>
-        </select>
+        </select> -->
       </div>
     </div>
 
@@ -44,6 +44,7 @@
             <th>Date Started</th>
             <th>Date End</th>
             <th>Amount Paid</th>
+            <th>Balance</th>
           </tr>
         </thead>
 
@@ -56,7 +57,7 @@
           >
             <td>{{ rental.stud_id }}</td>
             <td>{{ rental.f_name }} {{ rental.l_name }}</td>
-            <td>{{ rental.course_name }}</td>
+            <td>{{ rental.course }}</td>
             <td>{{ rental.email }}</td>
             <td>{{ rental.locker_number }}</td>
             <td>
@@ -67,6 +68,7 @@
             <td>{{ formatDate(rental.start_date) }}</td>
             <td>{{ formatDate(rental.due_date) }}</td>
             <td>₱{{ rental.paid_amount }}</td>
+            <td>₱{{ rental.balance }}</td>
           </tr>
 
           <tr v-if="rentals.length === 0">
@@ -189,6 +191,7 @@
             <p><strong>Date Started:</strong> {{ formatDate(selectedRental?.start_date) }}</p>
             <p><strong>Date End:</strong> {{ formatDate(selectedRental?.due_date) }}</p>
             <p><strong>Amount Paid:</strong> ₱{{ selectedRental?.paid_amount }}</p>
+            <p><strong>Balance:</strong> ₱{{ selectedRental?.balance }}</p>
             <div class="d-grid mt-3">
               <button class="btn btn-outline-primary" @click="openPaymentHistoryFromCard">
                 View Payment History
@@ -251,7 +254,7 @@ const openPaymentHistory = async (studId) => {
 
   try {
     const res = await axios.get(
-      `http://localhost:3001/payment-history-ad/${studId}`
+      `http://localhost:3001/history/${selectedStudentId.value}`
     );
     paymentHistory.value = res.data.records || [];
   } catch (err) {
